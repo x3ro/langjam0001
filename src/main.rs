@@ -10,7 +10,7 @@ use pest::error::Error;
 pub struct Lj1Parser;
 
 fn main() {
-    let src = r#"
+    let _src = r#"
 <foobar>
 fn plus(
     <test> a,
@@ -25,7 +25,7 @@ plus(b,4)
 print(b.$comment)
     "#;
 
-    let simple_src = r#"
+    let _simple_src = r#"
 fn plus3(a) {
     plus(a, 3)
 }
@@ -33,15 +33,22 @@ fn plus3(a) {
 print(plus3(5))
     "#;
 
-    //let res = Lj1Parser::parse(Rule::file, simple_src);
-    let res = parse(simple_src);
+    let super_simple_src = r#"
+print(plus3(5, 4))
+    "#;
+
+    let res = parse(super_simple_src);
     println!("{:#?}", res);
 }
 
 #[derive(Debug)]
 pub enum AstNode {
     Print(Box<AstNode>),
-    Noop
+    Call {
+        identifier: String,
+        arguments: Vec<AstNode>,
+    },
+    NoOp
 }
 
 pub fn parse(source: &str) -> Result<Vec<AstNode>, Error<Rule>> {
@@ -52,25 +59,45 @@ pub fn parse(source: &str) -> Result<Vec<AstNode>, Error<Rule>> {
     for pair in pairs {
         match pair.as_rule() {
             Rule::expression => {
-                ast.push(build_ast_from_expr(pair));
+                ast.push(build_ast_from_expression(pair));
+                // for inner_pair in pair.into_inner() {
+                //     ast.push(build_ast_from_expression(inner_pair));
+                // }
+
             }
 
             Rule::EOI => {
                 break;
             }
-            // Rule::expr => {
-            //     ast.push(Print(Box::new(build_ast_from_expr(pair))));
-            // }
-            x => {
-                panic!("Unknown rule '{:?}'", x)
-            }
+
+            x => panic!("Unknown rule '{:?}'", x)
         }
     }
 
     Ok(ast)
 }
 
-fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
-    AstNode::Noop
+fn build_ast_from_expression(pair: pest::iterators::Pair<Rule>) -> AstNode {
+    assert_eq!(pair.as_rule(), Rule::expression);
+
+    let mut inner = pair.into_inner();
+    // assert_eq!(inner.count(), 1);
+
+    let pair = inner.next().unwrap();
+    match pair.as_rule() {
+        Rule::function_call => {
+            let mut pair = pair.into_inner();
+            let identifier = pair.next().unwrap();
+            let argument_list = pair.next().unwrap().into_inner();
+
+            println!("{:#?}", argument_list);
+            AstNode::Call {
+                identifier: identifier.as_str().into(),
+                arguments: argument_list.map(|inner| build_ast_from_expression(inner)).collect()
+            }
+        }
+        x => panic!("Unknown rule '{:?}'", x)
+    }
 }
+
 

@@ -1,5 +1,4 @@
 WHITESPACE = _{ " " | NEWLINE }
-//empty_line = _{ NEWLINE }
 
 comment = { "<" ~ (!">" ~ ANY)* ~ ">" }
 
@@ -13,24 +12,34 @@ char = {
     | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
 }
 
-function_call = { identifier ~ "(" ~ arguments? ~ ")" }
+function_call = { identifier ~ "(" ~ argument_list? ~ ")" }
 
 value = _{ integer | string | function_call }
-assignment = { "let " ~ identifier ~ "=" ~ value }
-
+assignment = { "let " ~ identifier ~ "=" ~ expression }
 meta_property_access = ${ identifier ~ ".$" ~ identifier }
 
-argument = { comment? ~ (meta_property_access | function_call | identifier) }
-many_arguments = _{ argument ~ ("," ~ argument)+ }
-arguments = { many_arguments | argument }
-function = { comment? ~ "fn " ~ identifier ~ "(" ~ arguments? ~ ")" ~ "{" ~ body ~ "}" }
-body = { (!"}" ~ expression)* }
+//argument = { comment? ~ (meta_property_access | function_call | identifier) }
+expression_list = _{ expression ~ ("," ~ expression)+ }
+argument_list = { expression_list | expression }
 
-expression = { function | assignment | function_call }
+// we'll define 'expressions' as something that can return a value when evaluated (e.g. function call), and
+// a 'statement' as anything which can be evaluated but does not return a value (e.g. function definition)
+//
+// Wikipedia: In computer science, an expression is a syntactic entity in a programming language that may be evaluated
+//            to determine its value. [...] Expression is often contrasted with statement—a syntactic entity
+//            that has no value (an instruction).
+expression = { comment? ~ (function_call | meta_property_access | string | integer | identifier) }
+statement = { comment? ~ (function_definition | assignment) }
+
+function_definition = {
+    "fn " ~ identifier ~
+    "(" ~ argument_list? ~ ")" ~
+    "{" ~ (statement | expression)* ~ "}"
+}
 
 
 file = _{
     SOI ~
-    expression* ~
+    (statement | expression)* ~
     EOI
 }
