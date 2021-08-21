@@ -5,9 +5,9 @@ use pest::error::Error;
 #[grammar = "grammar.pest"]
 pub struct Lj1Parser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AstNode {
-    Print(Box<AstNode>),
+    // Print(Box<AstNode>),
     Call {
         identifier: String,
         arguments: Vec<AstNode>,
