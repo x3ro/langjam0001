@@ -1,0 +1,10 @@
+<foobar>
+fn merp(
+    <test> a,
+) {
+    let x = 42
+    print(a.$comment)
+    plus(x, length(a.$comment))
+}
+
+print(merp(5))

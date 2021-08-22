@@ -26,6 +26,13 @@ pub enum AstNode {
     },
 
     Identifier(String),
+
+    // e.g. foo.$comment
+    MetaPropertyAccess {
+        lhs: String,
+        rhs: String,
+    },
+
     Integer(i64),
     String(String),
     Comment(String),
@@ -148,6 +155,18 @@ fn build_ast_from_expression(pair: pest::iterators::Pair<Rule>) -> AstNode {
 
         Rule::identifier => {
             AstNode::Identifier(pair.as_str().into())
+        }
+
+        Rule::meta_property_access => {
+            let mut pair = pair.into_inner();
+
+            let lhs = pair.next().unwrap().as_str().into();
+            let rhs = pair.next().unwrap().as_str().into();
+
+            AstNode::MetaPropertyAccess {
+                lhs,
+                rhs
+            }
         }
 
         x => panic!("Unknown rule '{:?}' parsing {:#?}", x, pair)

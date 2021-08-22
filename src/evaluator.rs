@@ -110,6 +110,13 @@ impl Eval for AstNode {
                 state.get_var(name)
             }
 
+            AstNode::MetaPropertyAccess {
+                lhs,
+                rhs
+            } => {
+                todo!()
+            }
+
             AstNode::Assignment {
                 identifier,
                 value,
