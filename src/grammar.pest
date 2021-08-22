@@ -1,6 +1,7 @@
 WHITESPACE = _{ " " | NEWLINE }
 
-comment = { "<" ~ (!">" ~ ANY)* ~ ">" }
+comment_outer = _{ "<" ~ comment ~ ">" }
+comment = @{ (!">" ~ ANY)* }
 
 identifier = @{ (ASCII_ALPHANUMERIC | "_")+ }
 integer = @{ ("+" | "-")? ~ ASCII_DIGIT+ }
@@ -28,10 +29,11 @@ argument_list = { expression_list | expression }
 // Wikipedia: In computer science, an expression is a syntactic entity in a programming language that may be evaluated
 //            to determine its value. [...] Expression is often contrasted with statement—a syntactic entity
 //            that has no value (an instruction).
-expression = { comment? ~ (function_call | meta_property_access | string | integer | identifier) }
-statement = { comment? ~ (function_definition | assignment) }
+expression = { comment_outer? ~ (function_call | meta_property_access | string | integer | identifier) }
+statement = { comment_outer? ~ (function_definition | assignment) }
 
 function_definition = {
+    comment_outer? ~
     "fn " ~ identifier ~
     "(" ~ argument_list? ~ ")" ~
     "{" ~ (statement | expression)* ~ "}"

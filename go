@@ -23,16 +23,23 @@ function cmd_build {
 
 function cmd_test {
     cd "$SCRIPT_DIR"
-
     cmd_build
+
+    error=0
+
+    tempfile="$(mktemp)"
     for file in test/*.lj1; do
       echo -n $file
-      if target/debug/langjam0001 "$file" 1>/dev/null 2>&1; then
+      if target/debug/langjam0001 "$file" 1>"$tempfile" 2>&1; then
         echo " ✓"
       else
         echo " x"
+        error=1
+        cat "$tempfile"
       fi
     done
+
+    exit $error
 }
 
 function cmd_usage {

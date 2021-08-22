@@ -17,7 +17,6 @@ impl Scope {
 pub struct State {
     fns: HashMap<String, Rc<dyn Eval>>,
     arguments: Vec<AstNode>,
-    //global: Scope,
     scopes: Vec<Scope>,
 
 }
@@ -84,10 +83,6 @@ impl Eval for AstNode {
                 identifier,
                 arguments,
             } => {
-                for arg in arguments {
-                    arg.evaluate(state);
-                }
-
                 state.arguments = arguments.iter().map(|arg| arg.evaluate(state)).collect();
                 let function= state.fns.get(identifier);
 

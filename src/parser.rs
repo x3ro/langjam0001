@@ -1,6 +1,7 @@
 use pest::Parser;
 use pest::error::Error;
 use crate::parser::AstNode::Assignment;
+use pest::iterators::Pairs;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -8,7 +9,6 @@ pub struct Lj1Parser;
 
 #[derive(Debug, Clone)]
 pub enum AstNode {
-    // Print(Box<AstNode>),
     Call {
         identifier: String,
         arguments: Vec<AstNode>,
@@ -28,6 +28,7 @@ pub enum AstNode {
     Identifier(String),
     Integer(i64),
     String(String),
+    Comment(String),
     NoOp
 }
 
@@ -39,12 +40,8 @@ pub fn parse(source: &str) -> Result<Vec<AstNode>, Error<Rule>> {
 
     for pair in pairs {
         match pair.as_rule() {
-            Rule::expression => {
-                ast.push(build_ast_from_expression(pair));
-            }
-
-            Rule::statement => {
-                ast.push(build_ast_from_statement(pair))
+            Rule::expression | Rule::statement => {
+                ast.push(build_ast_from_statement_or_expression(pair));
             }
 
             Rule::EOI => {
@@ -58,14 +55,32 @@ pub fn parse(source: &str) -> Result<Vec<AstNode>, Error<Rule>> {
     Ok(ast)
 }
 
+fn extract_comment(pairs: &mut pest::iterators::Pairs<Rule>) -> Option<AstNode> {
+    if pairs.peek().unwrap().as_rule() != Rule::comment {
+        None
+    } else {
+        Some(AstNode::Comment(pairs.next().unwrap().as_str().into()))
+    }
+}
+
+fn build_ast_from_statement_or_expression(pair: pest::iterators::Pair<Rule>) -> AstNode {
+    match pair.as_rule() {
+        Rule::statement => build_ast_from_statement(pair),
+        Rule::expression => build_ast_from_expression(pair),
+        x => panic!("Unknown rule '{:?}' parsing {:#?}", x, pair)
+    }
+}
+
 fn build_ast_from_statement(pair: pest::iterators::Pair<Rule>) -> AstNode {
     assert_eq!(pair.as_rule(), Rule::statement);
 
     let mut inner = pair.into_inner();
     // assert_eq!(inner.count(), 1);
 
+    let comment = extract_comment(&mut inner);
+    //println!("{:?}", comment);
+
     let pair = inner.next().unwrap();
-    //println!("{:#?}", pair);
 
     match pair.as_rule() {
         Rule::function_definition => {
@@ -75,8 +90,9 @@ fn build_ast_from_statement(pair: pest::iterators::Pair<Rule>) -> AstNode {
 
             let mut body = vec![];
             while pair.peek().is_some() {
-                let expr = pair.next().unwrap();
-                body.push(build_ast_from_expression(expr));
+
+                let node = pair.next().unwrap();
+                body.push(build_ast_from_statement_or_expression(node));
             }
 
             AstNode::Definition {
@@ -103,9 +119,9 @@ fn build_ast_from_statement(pair: pest::iterators::Pair<Rule>) -> AstNode {
 
 fn build_ast_from_expression(pair: pest::iterators::Pair<Rule>) -> AstNode {
     assert_eq!(pair.as_rule(), Rule::expression);
-    //println!("---------\n{:#?}", pair);
-
     let mut inner = pair.into_inner();
+
+    let comment = extract_comment(&mut inner);
     // assert_eq!(inner.count(), 1);
 
     let pair = inner.next().unwrap();

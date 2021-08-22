@@ -1,5 +1,6 @@
 use crate::parser::parse;
 use crate::evaluator::{Eval, State};
+use std::{fs, env};
 
 #[macro_use]
 extern crate pest_derive;
@@ -8,7 +9,7 @@ mod parser;
 mod evaluator;
 
 fn main() {
-    let _src = r#"
+    let src = r#"
 <foobar>
 fn plus(
     <test> a,
@@ -23,33 +24,15 @@ plus(b,4)
 print(b.$comment)
     "#;
 
-    let not_so_simple = r#"
-fn area(a, b) {
-    multiply(a, b)
-}
-let b = 42
-print(area(5,4))
-let merp = area(5,4)
-print(merp)
-print(b)
-    "#;
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        panic!("Please specify the source file to be evaluated as the only parameter")
+    }
 
-    let _simple_src = r#"
-fn plus3(a) {
-    plus(a, 3)
-}
+    let contents = fs::read_to_string(args.get(1).unwrap())
+        .expect("Something went wrong reading the source file");
 
-print(plus3(5))
-    "#;
-
-    let _super_simple_src = r#"
-print("foo")
-print("bar")
-print(4)
-print(plus(4,4,1,2,3,4))
-    "#;
-
-    let res = parse(not_so_simple).unwrap();
+    let res = parse(contents.as_str()).unwrap();
 
     let mut state = State::new();
     for node in res {
