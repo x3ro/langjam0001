@@ -1,7 +1,6 @@
 use crate::parser::AstNode;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::env::args;
 
 pub struct Scope {
     vars: HashMap<String, AstNode>
@@ -78,7 +77,7 @@ impl Eval for Vec<AstNode> {
 
 impl Eval for AstNode {
     fn evaluate(&self, mut state: &mut State) -> AstNode {
-        println!("{:#?}", self);
+        //println!("{:#?}", self);
         match self {
             AstNode::Call {
                 identifier,
@@ -101,7 +100,6 @@ impl Eval for AstNode {
             AstNode::String(_) => self.clone(),
 
             AstNode::Definition { identifier, arguments, body } => {
-                // state.fns.insert(identifier.into(), Rc::new(body.clone()));
                 let inv = Invocation {
                     identifier: identifier.into(),
                     arguments: arguments.clone(),
@@ -136,10 +134,9 @@ impl Eval for Invocation {
         state.push_scope();
 
         for i in 0..state.arguments.len() {
-            let value = state.arguments.get(i).unwrap();
-            let name = self.arguments.get(i).unwrap();
-            state.set_var(name.clone(), value.clone());
-
+            let value = state.arguments.get(i).unwrap().clone();
+            let name = self.arguments.get(i).unwrap().clone();
+            state.set_var(name, value);
         }
 
         let res = self.body.evaluate(state);

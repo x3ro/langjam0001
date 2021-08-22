@@ -61,7 +61,7 @@ fn build_ast_from_statement(pair: pest::iterators::Pair<Rule>) -> AstNode {
     // assert_eq!(inner.count(), 1);
 
     let pair = inner.next().unwrap();
-    println!("{:#?}", pair);
+    //println!("{:#?}", pair);
 
     match pair.as_rule() {
         Rule::function_definition => {
@@ -88,7 +88,7 @@ fn build_ast_from_statement(pair: pest::iterators::Pair<Rule>) -> AstNode {
 
 fn build_ast_from_expression(pair: pest::iterators::Pair<Rule>) -> AstNode {
     assert_eq!(pair.as_rule(), Rule::expression);
-    println!("---------\n{:#?}", pair);
+    //println!("---------\n{:#?}", pair);
 
     let mut inner = pair.into_inner();
     // assert_eq!(inner.count(), 1);

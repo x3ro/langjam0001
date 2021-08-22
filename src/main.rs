@@ -31,7 +31,7 @@ fn plus3(a) {
 print(plus3(5))
     "#;
 
-    let super_simple_src = r#"
+    let _super_simple_src = r#"
 print("foo")
 print("bar")
 print(4)
