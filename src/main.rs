@@ -23,7 +23,7 @@ plus(b,4)
 print(b.$comment)
     "#;
 
-    let _simple_src = r#"
+    let simple_src = r#"
 fn plus3(a) {
     plus(a, 3)
 }
@@ -38,7 +38,7 @@ print(4)
 print(plus(4,4,1,2,3,4))
     "#;
 
-    let res = parse(super_simple_src).unwrap();
+    let res = parse(simple_src).unwrap();
 
     let mut state = State::new();
     for node in res {
