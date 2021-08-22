@@ -119,7 +119,8 @@ impl Eval for AstNode {
                 identifier,
                 value,
             } => {
-                state.set_var(identifier.into(), value.as_ref().clone());
+                let node = value.as_ref().clone().evaluate(state);
+                state.set_var(identifier.into(), node);
                 AstNode::NoOp
             }
 

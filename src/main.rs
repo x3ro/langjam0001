@@ -29,6 +29,8 @@ fn area(a, b) {
 }
 let b = 42
 print(area(5,4))
+let merp = area(5,4)
+print(merp)
 print(b)
     "#;
 
