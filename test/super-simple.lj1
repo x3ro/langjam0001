@@ -1,4 +1,0 @@
-print("foo")
-print("bar")
-print(4)
-print(plus(4,4,1,2,3,4))

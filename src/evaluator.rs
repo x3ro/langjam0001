@@ -37,6 +37,7 @@ impl State {
         fns.insert("plus".into(), Rc::new(BuiltinPlus{}));
         fns.insert("multiply".into(), Rc::new(BuiltinMultiply{}));
         fns.insert("length".into(), Rc::new(BuiltinLength{}));
+        fns.insert("concat".into(), Rc::new(BuiltinConcat{}));
 
         State {
             fns,
@@ -114,13 +115,13 @@ impl Eval for AstNode {
                 AstNode::NoOp
             }
 
-            AstNode::Identifier{ name, comment } => {
+            AstNode::Identifier{ name, comment: _comment } => {
                 state.get_var(name).value
             }
 
             AstNode::MetaPropertyAccess {
                 lhs,
-                rhs
+                rhs: _rhs
             } => {
                 //AstNode::String("".into())
                 match state.get_var(lhs).identifier {
@@ -232,5 +233,25 @@ impl Eval for BuiltinLength {
             }
             x => panic!("Tried to call length with invalid value (not a string) '{:?}'", x)
         }
+    }
+}
+
+struct BuiltinConcat;
+impl Eval for BuiltinConcat {
+    fn evaluate(&self, state: &mut State) -> AstNode {
+        assert!(state.arguments.len() > 1, "`concat` requires two or more arguments");
+
+        let mut res: String = "".into();
+
+        for arg in &state.arguments {
+            match arg {
+                AstNode::String(x) => {
+                    res.push_str(x);
+                }
+                x => panic!("Tried to call `concat` with invalid value (not a string) '{:?}'", x)
+            }
+        }
+
+        AstNode::String(res)
     }
 }

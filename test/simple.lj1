@@ -1,5 +1,0 @@
-fn plus3(a) {
-    plus(a, 3)
-}
-
-print(plus3(5))

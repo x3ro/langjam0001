@@ -28,7 +28,7 @@ function cmd_test {
     error=0
 
     tempfile="$(mktemp)"
-    for file in test/*.lj1; do
+    for file in examples/*.lj1; do
       echo -n $file
       if target/debug/langjam0001 "$file" 1>"$tempfile" 2>&1; then
         echo " ✓"

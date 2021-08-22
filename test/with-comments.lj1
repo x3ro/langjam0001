@@ -1,9 +1,0 @@
-fn i_like(
-    <test> a,
-) {
-    let x = "I like "
-    print(a.$comment)
-    plus(length(x), length(a.$comment))
-}
-
-print(i_like("turtles"))

@@ -1,8 +1,10 @@
 fn area(a, b) {
     multiply(a, b)
 }
+
 let b = 42
-print(area(5,4))
-let merp = area(5,4)
-print(merp)
+print(area(b, 4))
+
+let res = area(5, b)
+print(res)
 print(b)

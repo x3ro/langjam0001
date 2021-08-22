@@ -1,8 +1,6 @@
 use pest::Parser;
 use pest::error::Error;
-use crate::parser::AstNode::Assignment;
-use pest::iterators::Pairs;
-use std::hash::{Hash, Hasher};
+use std::hash::{Hash};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -117,11 +115,9 @@ fn build_ast_from_statement(pair: pest::iterators::Pair<Rule>) -> AstNode {
     let mut inner = pair.into_inner();
     // assert_eq!(inner.count(), 1);
 
-    let comment = extract_comment(&mut inner);
-    //println!("{:?}", comment);
+    let _comment = extract_comment(&mut inner);
 
     let pair = inner.next().unwrap();
-
     match pair.as_rule() {
         Rule::function_definition => {
             let mut pair = pair.into_inner();
