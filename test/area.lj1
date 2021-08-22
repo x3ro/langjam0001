@@ -1,0 +1,7 @@
+let x = 5
+fn area(a,b) {
+    let result = multiply(a,b)
+    result
+}
+
+print(area(x, 10))
