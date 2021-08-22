@@ -2,6 +2,7 @@ use pest::Parser;
 use pest::error::Error;
 use crate::parser::AstNode::Assignment;
 use pest::iterators::Pairs;
+use std::hash::{Hash, Hasher};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -16,7 +17,7 @@ pub enum AstNode {
 
     Definition {
         identifier: String,
-        arguments: Vec<String>,
+        arguments: Vec<AstNode>,
         body: Vec<AstNode>,
     },
 
@@ -25,7 +26,10 @@ pub enum AstNode {
         value: Box<AstNode>,
     },
 
-    Identifier(String),
+    Identifier {
+        name: String,
+        comment: Box<AstNode>,
+    },
 
     // e.g. foo.$comment
     MetaPropertyAccess {
@@ -35,9 +39,38 @@ pub enum AstNode {
 
     Integer(i64),
     String(String),
-    Comment(String),
     NoOp
 }
+
+// impl Hash for AstNode {
+//     fn hash<H: Hasher>(&self, state: &mut H) {
+//         match self {
+//             AstNode::Call { .. } => {}
+//             AstNode::Definition { .. } => {}
+//             AstNode::Assignment { .. } => {}
+//             AstNode::Identifier { name, .. } => {
+//                 name.hash(state);
+//             }
+//             AstNode::MetaPropertyAccess { .. } => {}
+//             AstNode::Integer(_) => {}
+//             AstNode::String(_) => {}
+//             AstNode::Comment(_) => {}
+//             AstNode::NoOp => {}
+//         }
+//         // self.id.hash(state);
+//         // self.phone.hash(state);
+//     }
+// }
+//
+// impl PartialEq for AstNode {
+//     fn eq(&self, other: &Self) -> bool {
+//
+//         match self {
+//
+//         }
+//     }
+// }
+// impl Eq for AstNode {}
 
 pub fn parse(source: &str) -> Result<Vec<AstNode>, Error<Rule>> {
     let mut ast = vec![];
@@ -66,7 +99,7 @@ fn extract_comment(pairs: &mut pest::iterators::Pairs<Rule>) -> Option<AstNode> 
     if pairs.peek().unwrap().as_rule() != Rule::comment {
         None
     } else {
-        Some(AstNode::Comment(pairs.next().unwrap().as_str().into()))
+        Some(AstNode::String(pairs.next().unwrap().as_str().into()))
     }
 }
 
@@ -93,7 +126,7 @@ fn build_ast_from_statement(pair: pest::iterators::Pair<Rule>) -> AstNode {
         Rule::function_definition => {
             let mut pair = pair.into_inner();
             let identifier = pair.next().unwrap().as_str();
-            let argument_list = pair.next().unwrap().into_inner().map(|x| x.as_str().into()).collect();
+            let argument_list = pair.next().unwrap().into_inner().map(|x| build_ast_from_expression(x)).collect();
 
             let mut body = vec![];
             while pair.peek().is_some() {
@@ -154,7 +187,10 @@ fn build_ast_from_expression(pair: pest::iterators::Pair<Rule>) -> AstNode {
         }
 
         Rule::identifier => {
-            AstNode::Identifier(pair.as_str().into())
+            AstNode::Identifier {
+                name: pair.as_str().into(),
+                comment: Box::new(comment.unwrap_or(AstNode::String("".into()))),
+            }
         }
 
         Rule::meta_property_access => {

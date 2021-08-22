@@ -1,9 +1,16 @@
 use crate::parser::AstNode;
 use std::collections::HashMap;
 use std::rc::Rc;
+use crate::parser::AstNode::Integer;
+
+#[derive(Clone)]
+pub struct ScopeItem {
+    identifier: AstNode,
+    value: AstNode,
+}
 
 pub struct Scope {
-    vars: HashMap<String, AstNode>
+    vars: HashMap<String, ScopeItem>
 }
 
 impl Scope {
@@ -29,6 +36,7 @@ impl State {
         fns.insert("print".into(), Rc::new(BuiltinPrint{}));
         fns.insert("plus".into(), Rc::new(BuiltinPlus{}));
         fns.insert("multiply".into(), Rc::new(BuiltinMultiply{}));
+        fns.insert("length".into(), Rc::new(BuiltinLength{}));
 
         State {
             fns,
@@ -47,12 +55,12 @@ impl State {
         self.scopes.pop().unwrap()
     }
 
-    pub fn set_var(&mut self, name: String, value: AstNode) {
+    pub fn set_var(&mut self, name: String, value: ScopeItem) {
         let len = self.scopes.len();
         self.scopes[len-1].vars.insert(name, value);
     }
 
-    pub fn get_var(&self, name: &String) -> AstNode {
+    pub fn get_var(&self, name: &String) -> ScopeItem {
         let v = self.scopes[self.scopes.len()-1].vars.get(name);
         if v.is_none() {
             panic!("Variable '{}' is not known in the current scope", name)
@@ -106,15 +114,21 @@ impl Eval for AstNode {
                 AstNode::NoOp
             }
 
-            AstNode::Identifier(name) => {
-                state.get_var(name)
+            AstNode::Identifier{ name, comment } => {
+                state.get_var(name).value
             }
 
             AstNode::MetaPropertyAccess {
                 lhs,
                 rhs
             } => {
-                todo!()
+                //AstNode::String("".into())
+                match state.get_var(lhs).identifier {
+                    AstNode::Identifier { comment, .. } => {
+                        comment.evaluate(state)
+                    }
+                    x => panic!("Unknown node '{:?}'", x)
+                }
             }
 
             AstNode::Assignment {
@@ -122,7 +136,7 @@ impl Eval for AstNode {
                 value,
             } => {
                 let node = value.as_ref().clone().evaluate(state);
-                state.set_var(identifier.into(), node);
+                state.set_var(identifier.into(), ScopeItem { identifier: AstNode::NoOp, value: node });
                 AstNode::NoOp
             }
 
@@ -133,7 +147,7 @@ impl Eval for AstNode {
 
 struct Invocation {
     identifier: String,
-    arguments: Vec<String>,
+    arguments: Vec<AstNode>,
     body: Vec<AstNode>,
 }
 
@@ -147,8 +161,14 @@ impl Eval for Invocation {
 
         for i in 0..state.arguments.len() {
             let value = state.arguments.get(i).unwrap().clone();
-            let name = self.arguments.get(i).unwrap().clone();
-            state.set_var(name, value);
+
+            let arg = self.arguments.get(i).unwrap();
+            if let AstNode::Identifier {name, ..} = arg {
+                let item = ScopeItem { identifier: arg.clone(), value: value.clone() };
+                state.set_var(name.clone(), item);
+            } else {
+                panic!("Argument was not an AstNode::String {:?}", arg)
+            }
         }
 
         let res = self.body.evaluate(state);
@@ -162,7 +182,7 @@ struct BuiltinPrint;
 impl Eval for BuiltinPrint {
     fn evaluate(&self, state: &mut State) -> AstNode {
         for arg in &state.arguments {
-            println!("{:?}", arg)
+            println!("# => {:?}", arg)
         }
         AstNode::NoOp
     }
@@ -197,5 +217,20 @@ impl Eval for BuiltinMultiply {
             }
         }
         AstNode::Integer(res)
+    }
+}
+
+struct BuiltinLength;
+impl Eval for BuiltinLength {
+    fn evaluate(&self, state: &mut State) -> AstNode {
+        assert_eq!(state.arguments.len(), 1, "Tried to call `length` with invalid number of arguments {}", state.arguments.len());
+        let arg = state.arguments.get(0).unwrap();
+
+        match arg {
+            AstNode::String(x) => {
+                Integer(x.len() as i64)
+            }
+            x => panic!("Tried to call length with invalid value (not a string) '{:?}'", x)
+        }
     }
 }

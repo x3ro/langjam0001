@@ -1,10 +1,9 @@
-<foobar>
-fn merp(
+fn i_like(
     <test> a,
 ) {
-    let x = 42
+    let x = "I like "
     print(a.$comment)
-    plus(x, length(a.$comment))
+    plus(length(x), length(a.$comment))
 }
 
-print(merp(5))
+print(i_like("turtles"))
