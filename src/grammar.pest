@@ -21,7 +21,7 @@ meta_property_access = ${ identifier ~ ".$" ~ identifier }
 
 //argument = { comment? ~ (meta_property_access | function_call | identifier) }
 expression_list = _{ expression ~ ("," ~ expression)+ }
-argument_list = { expression_list | expression }
+argument_list = { (expression_list | expression) ~ ","? }
 
 // we'll define 'expressions' as something that can return a value when evaluated (e.g. function call), and
 // a 'statement' as anything which can be evaluated but does not return a value (e.g. function definition)
