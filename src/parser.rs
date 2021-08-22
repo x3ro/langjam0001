@@ -1,5 +1,6 @@
 use pest::Parser;
 use pest::error::Error;
+use crate::parser::AstNode::Assignment;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -19,7 +20,10 @@ pub enum AstNode {
         body: Vec<AstNode>,
     },
 
-
+    Assignment {
+        identifier: String,
+        value: Box<AstNode>,
+    },
 
     Identifier(String),
     Integer(i64),
@@ -79,6 +83,17 @@ fn build_ast_from_statement(pair: pest::iterators::Pair<Rule>) -> AstNode {
                 identifier: identifier.into(),
                 arguments: argument_list,
                 body
+            }
+        }
+
+        Rule::assignment => {
+            let mut pair = pair.into_inner();
+            let identifier = pair.next().unwrap().as_str().into();
+            let value = Box::new(build_ast_from_expression(pair.next().unwrap()));
+
+            AstNode::Assignment {
+                identifier,
+                value,
             }
         }
 

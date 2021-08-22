@@ -23,7 +23,16 @@ plus(b,4)
 print(b.$comment)
     "#;
 
-    let simple_src = r#"
+    let not_so_simple = r#"
+fn area(a, b) {
+    multiply(a, b)
+}
+let b = 42
+print(area(5,4))
+print(b)
+    "#;
+
+    let _simple_src = r#"
 fn plus3(a) {
     plus(a, 3)
 }
@@ -38,7 +47,7 @@ print(4)
 print(plus(4,4,1,2,3,4))
     "#;
 
-    let res = parse(simple_src).unwrap();
+    let res = parse(not_so_simple).unwrap();
 
     let mut state = State::new();
     for node in res {

@@ -29,6 +29,7 @@ impl State {
         // Built-in functions
         fns.insert("print".into(), Rc::new(BuiltinPrint{}));
         fns.insert("plus".into(), Rc::new(BuiltinPlus{}));
+        fns.insert("multiply".into(), Rc::new(BuiltinMultiply{}));
 
         State {
             fns,
@@ -114,6 +115,14 @@ impl Eval for AstNode {
                 state.get_var(name)
             }
 
+            AstNode::Assignment {
+                identifier,
+                value,
+            } => {
+                state.set_var(identifier.into(), value.as_ref().clone());
+                AstNode::NoOp
+            }
+
             x => panic!("Unknown node '{:?}'", x)
         }
     }
@@ -169,5 +178,21 @@ impl Eval for BuiltinPlus {
             }
         }
         AstNode::Integer(sum)
+    }
+}
+
+struct BuiltinMultiply;
+impl Eval for BuiltinMultiply {
+    fn evaluate(&self, state: &mut State) -> AstNode {
+        let mut res:i64 = 1;
+        for arg in &state.arguments {
+            match arg {
+                AstNode::Integer(x) => {
+                    res *= x;
+                }
+                x => panic!("Tried to call multiply with invalid value '{:?}'", x)
+            }
+        }
+        AstNode::Integer(res)
     }
 }
